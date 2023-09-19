@@ -27,6 +27,12 @@ pub enum EndPoint {
     #[default]
     S3,
     S3DualStack,
+    /// S3兼容path模式 ; url: {region}/{bucket_name}/ <br>
+    /// example:
+    /// region: http://127.0.0.1:8900 <br>
+    /// bucket_name: updater <br>
+    /// target: http://127.0.0.1:8900/updater/
+    S3PathCompatibly,
     GCS,
     DigitalOceanSpaces,
 }
@@ -520,6 +526,9 @@ fn fetch_releases_from_s3(
             "https://{}.s3.dualstack.{}.amazonaws.com/",
             bucket_name, region?
         ),
+        EndPoint::S3PathCompatibly => {
+            format!("{}/{}/", region?, bucket_name)
+        }
         EndPoint::DigitalOceanSpaces => format!(
             "https://{}.{}.digitaloceanspaces.com/",
             bucket_name, region?
@@ -528,7 +537,10 @@ fn fetch_releases_from_s3(
     };
 
     let api_url = match end_point {
-        EndPoint::S3 | EndPoint::S3DualStack | EndPoint::DigitalOceanSpaces => format!(
+        EndPoint::S3
+        | EndPoint::S3DualStack
+        | EndPoint::S3PathCompatibly
+        | EndPoint::DigitalOceanSpaces => format!(
             "{}?list-type=2&max-keys={}{}",
             download_base_url, MAX_KEYS, prefix
         ),
